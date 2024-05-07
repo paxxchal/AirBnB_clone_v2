@@ -3,9 +3,10 @@
 generates a .tgz archive from the contents of the web_static
 """
 
-from fabric.api import local, put, run, env
+from fabric.api import local, put, run, cd, env
 from datetime import datetime
 from os import path
+from io import StringIO
 
 env.hosts = ['35.153.83.180', '18.209.223.169']
 
@@ -63,3 +64,25 @@ def deploy():
     if not archive_path:
         return False
     return do_deploy(archive_path)
+
+
+def do_clean(number=0):
+    """ 
+    deletes out-of-date archives.
+    number is the number of the archives, including the most recent, to keep.
+     - If number is 0 or 1, keep only the most recent version of your archive.
+     - if number is 2, keep the most recent, and second most recent versions of your archive.
+     - etc.
+    """
+    file_count = 0
+    stdout = StringIO()
+    with cd("/data/web_static/releases"):
+        run("ls -1 | wc -l", stdout=stdout)
+        output = stdout.getvalue()
+        for index, letter in enumerate(output):
+            if letter == ':':
+                file_count = number(output[index+2:])
+
+    print("file count:", type(file_count), file_count)
+
+                
